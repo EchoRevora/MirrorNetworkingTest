@@ -5,17 +5,32 @@ using UnityEngine;
 
 namespace EchoNetworkSpace
 {
-    public struct CreatePlayerObject : NetworkMessage { }
-
-    //public static class NetworkGlobals
-    //{
-    //    public static Dictionary<int, LocalPlayerManager> clients;
-    //}
+    //public struct CreatePlayerObject : NetworkMessage { }
 
     public class EchoNetworkManager : NetworkManager
     {
+        public Dictionary<Guid, NetworkedPlayer> networkedPlayers {get; private set; } = new();
 
-        //public Dictionary<int, LocalPlayerManager> clients;
+        public static EchoNetworkManager instance => (EchoNetworkManager)singleton;
+
+        public bool RegisterNetworkedPlayer(NetworkedPlayer player)
+        {
+            if(networkedPlayers.ContainsKey(player.Uid))
+            {
+                Debug.LogError("ALARM!! Player is already in list.");
+                return false;
+            }
+
+            networkedPlayers.Add(player.Uid, player);
+            Debug.Log("Player List:");
+            foreach (var networkPlayer in networkedPlayers)
+            {
+                Debug.Log(networkPlayer.Key);
+            }
+
+            return true;
+        }
+
 
         public override void OnStartServer()
         {
@@ -37,19 +52,10 @@ namespace EchoNetworkSpace
 
         public override void OnServerAddPlayer(NetworkConnectionToClient conn)
         {
-            //Transform startPos = GetStartPosition();
-            //GameObject player = startPos != null
-            //    ? Instantiate(playerPrefab, startPos.position, startPos.rotation)
-            //    : Instantiate(playerPrefab);
-
             GameObject player = Instantiate(playerPrefab);
 
-            // instantiating a "Player" prefab gives it the name "Player(clone)"
-            // => appending the connectionId is WAY more useful for debugging!
             player.name = $"{playerPrefab.name} [connId={conn.connectionId}]";
             NetworkServer.AddPlayerForConnection(conn, player);
-
-            //NetworkGlobals.clients.Add(conn.connectionId, player.GetComponent<LocalPlayerManager>());
         }
 
 

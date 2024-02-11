@@ -1,77 +1,54 @@
 using Mirror;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class NetworkClient : NetworkBehaviour
+namespace EchoNetworkSpace
 {
-    // Equivalent of NetClient in Buhei
-
-    [SerializeField]
-    private GameObject actualPlayerPrefab;
-    [SerializeField]
-    private GameObject networkPlayerPrefab;
-
-    private Dictionary<Guid, Player> _localPlayers = new();
-
-    // Basically on connection created
-    void OnLocalPlayerJoined()
+    public class NetworkClient : NetworkBehaviour
     {
-        //NetworkServer.connections
-        // Spawn Network Player prefab
-    }
+        [SerializeField]
+        private GameObject networkPlayerPrefab;
 
-    // Basically on connection terminated
-    void OnLocalPlayerLeft()
-    {
-        // Destroy Network Player
-    }
-
-    public bool _spawnedPlayer = false;
+        private bool _spawnedPlayer = false;
 
 
-    private void Update()
-    {
-        if (isLocalPlayer)
+        private void Update()
         {
-            // Join action from input system. For now hardcap to 1.
-            if (!_spawnedPlayer && Input.GetKeyDown(KeyCode.Return))
+            if (isLocalPlayer)
             {
-                _spawnedPlayer = true;
+                // Join action from input system. For now hardcap to 1.
+                if (!_spawnedPlayer && Input.GetKeyDown(KeyCode.Return))
+                {
+                    _spawnedPlayer = true;
 
-                Cmd_InstantiatePlayer();
+                    Cmd_CreateNetworkedPlayer();
+                }
             }
         }
-    }
 
-    [Command]
-    private void Cmd_InstantiatePlayer()
-    {
-        Guid guid = Guid.NewGuid();
-        GameObject go = Instantiate(actualPlayerPrefab);
-        go.name = actualPlayerPrefab.name + "_" + guid;
 
-        NetworkConnectionToClient ownerConnection = NetworkServer.connections.Values.First(x => x.connectionId == connectionToClient.connectionId);
-
-        // lol this just throws and error.
-        NetworkServer.Spawn(go, ownerConnection);
-
-        //Player p = go.GetComponent<Player>();
-        //p.OnMirrorInstantiate();
-
-        //Rpc_InstantiatePlayer(new PlayerInfo(guid.ToString(), ownerConnectionId));
-    }
-
-    private struct PlayerInfo
-    {
-        public string guid;
-        public int connectionId;
-
-        public PlayerInfo(string guid, int ownerConnectionId)
+        [Command]
+        private void Cmd_CreateNetworkedPlayer()
         {
-            this.guid = guid;
-            this.connectionId = ownerConnectionId;
+            Guid guid;
+            do
+            {
+                guid = Guid.NewGuid();
+            }
+            while (EchoNetworkManager.instance.networkedPlayers.ContainsKey(guid));
+
+            GameObject go = Instantiate(networkPlayerPrefab);
+            go.name = networkPlayerPrefab.name + "_" + guid;
+
+            NetworkConnectionToClient ownerConnection = NetworkServer.connections.Values.First(x => x.connectionId == connectionToClient.connectionId);
+
+
+            NetworkServer.Spawn(go, ownerConnection);
+
+            NetworkedPlayer p = go.GetComponent<NetworkedPlayer>();
+
+            p.RpcOnMirrorInstantiate(guid.ToString());
         }
     }
 }

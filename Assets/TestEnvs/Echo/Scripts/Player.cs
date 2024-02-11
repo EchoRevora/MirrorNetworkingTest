@@ -5,11 +5,11 @@ namespace EchoNetworkSpace
 {
     public class Player : NetworkBehaviour
     {
-        private bool authorityAndReady;
+        private bool ownedAndReady;
 
         void Update()
         {
-            if (authorityAndReady)
+            if (ownedAndReady)
             {
                 HandleMovement();
             }
@@ -26,10 +26,12 @@ namespace EchoNetworkSpace
 
         public override void OnStartAuthority()
         {
+            Debug.Log("Player isOwned: " + isOwned);
+
             // This is called on client (who is NOT server), even though authority is false. Idk.
             base.OnStartAuthority();
 
-            authorityAndReady = true;
+            ownedAndReady = true;
         }
     }
 }

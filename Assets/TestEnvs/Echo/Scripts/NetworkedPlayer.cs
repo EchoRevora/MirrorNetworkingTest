@@ -16,6 +16,8 @@ namespace EchoNetworkSpace
         // For now, just spawn a player object
         public override void OnStartAuthority()
         {
+            Debug.Log("NetworkedPlayer isOwned: " + isOwned);
+
             CmdSpawnPlayerObject();
         }
 
@@ -25,6 +27,7 @@ namespace EchoNetworkSpace
             GameObject go = Instantiate(playerPrefab);
 
             NetworkConnectionToClient ownerConnection = NetworkServer.connections.Values.First(x => x.connectionId == netIdentity.connectionToClient.connectionId);
+            go.name = playerPrefab.name + "[owner=" + ownerConnection.connectionId + "]";
 
             NetworkServer.Spawn(go, ownerConnection);
         }

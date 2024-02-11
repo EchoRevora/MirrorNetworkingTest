@@ -5,7 +5,11 @@ using UnityEngine;
 
 namespace EchoNetworkSpace
 {
-    //public struct CreatePlayerObject : NetworkMessage { }
+    // NOTES for later:
+    // connectionId local seems to always be 0
+    // To check whether an object is owned by a local player, use isOwned. Not authority
+
+
 
     public class EchoNetworkManager : NetworkManager
     {
@@ -13,22 +17,28 @@ namespace EchoNetworkSpace
 
         public static EchoNetworkManager instance => (EchoNetworkManager)singleton;
 
-        public bool RegisterNetworkedPlayer(NetworkedPlayer player)
+        public void RegisterNetworkedPlayer(NetworkedPlayer player)
         {
             if(networkedPlayers.ContainsKey(player.Uid))
             {
-                Debug.LogError("ALARM!! Player is already in list.");
-                return false;
+                Debug.LogError("ALARM!! Networked Player is already in list.");
             }
 
             networkedPlayers.Add(player.Uid, player);
-            Debug.Log("Player List:");
-            foreach (var networkPlayer in networkedPlayers)
+
+            Debug.Log($"Player with id {player.Uid} ADDED to list.");
+        }
+
+        public void UnregisterPlayer(NetworkedPlayer player)
+        {
+            if (!networkedPlayers.ContainsKey(player.Uid))
             {
-                Debug.Log(networkPlayer.Key);
+                Debug.LogError("ALARM!! Disconnecting Networked Player is not in the list.");
             }
 
-            return true;
+            Debug.Log($"Player with id {player.Uid} REMOVED from list.");
+
+            networkedPlayers.Remove(player.Uid);
         }
 
 
